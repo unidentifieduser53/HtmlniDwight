@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Contact</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<h1>Contact Us</h1>
+</header>
+
+<nav>
+<a href="index.html">Home</a>
+<a href="about.html">About</a>
+<a href="destinations.html">Destinations</a>
+<a href="contact.html">Contact</a>
+</nav>
+
+<div class="container">
+
+<div class="card">
+
+<h2>Book Your Tour</h2>
+
+<form>
+
+<label>Name</label>
+
+<input type="text">
+
+<label>Email</label>
+
+<input type="email">
+
+<label>Destination</label>
+
+<select>
+<option>St. Michael Church</option>
+<option>Marilao River</option>
+<option>SM City Marilao</option>
+</select>
+
+<label>Message</label>
+
+<textarea rows="5"></textarea>
+
+<button>Submit</button>
+
+</form>
+
+</div>
+
+</div>
+
+<footer>
+Thank You for Visiting Bulacan!
+</footer>
+
+</body>
+</html>
