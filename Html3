@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Destinations</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<h1>Tourist Destinations</h1>
+</header>
+
+<nav>
+<a href="index.html">Home</a>
+<a href="about.html">About</a>
+<a href="destinations.html">Destinations</a>
+<a href="contact.html">Contact</a>
+</nav>
+
+<div class="container">
+
+<div class="card">
+<h2>St. Michael the Archangel Parish Church</h2>
+<p>
+A historic Catholic church known for its beautiful architecture and religious significance.
+</p>
+</div>
+
+<div class="card">
+<h2>Marilao River</h2>
+<p>
+A river that has been an important part of the municipality's history and livelihood.
+</p>
+</div>
+
+<div class="card">
+<h2>SM City Marilao</h2>
+<p>
+A shopping and entertainment destination offering restaurants, cinemas, and retail stores.
+</p>
+</div>
+
+<div class="card">
+<h2>Local Food Trip</h2>
+<p>
+Taste famous Bulacan delicacies including chicharon, puto, and local kakanin.
+</p>
+</div>
+
+</div>
+
+<footer>
+Visit Marilao Today!
+</footer>
+
+</body>
+</html>
