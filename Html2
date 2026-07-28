@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>About</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+<h1>About Marilao</h1>
+</header>
+
+<nav>
+<a href="index.html">Home</a>
+<a href="about.html">About</a>
+<a href="destinations.html">Destinations</a>
+<a href="contact.html">Contact</a>
+</nav>
+
+<div class="container">
+
+<div class="card">
+<h2>History</h2>
+
+<p>
+Marilao is one of the municipalities of Bulacan and serves as a gateway between
+Metro Manila and Central Luzon. It continues to grow while preserving its rich
+heritage and traditions.
+</p>
+
+</div>
+
+<div class="card">
+
+<h2>Culture</h2>
+
+<p>
+Visitors enjoy local festivals, traditional Filipino hospitality,
+native delicacies, and community celebrations throughout the year.
+</p>
+
+</div>
+
+</div>
+
+<footer>
+Explore Bulacan
+</footer>
+
+</body>
+</html>
