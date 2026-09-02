@@ -1,0 +1,185 @@
+import mysql.connector
+from mysql.connector import Error
+
+# Expected table schema:
+# CREATE TABLE tbl_product (
+#     PRODUCT_ID INT AUTO_INCREMENT PRIMARY KEY,
+#     PRODUCT_NAME VARCHAR(100),
+#     PRODUCT_PRICE DECIMAL(10,2),
+#     PRODUCT_QUANTITY INT
+# );
+
+while True:
+    print("\n===== JOLLIBEE PRODUCT SYSTEM =====")
+    print("1. Add a product")
+    print("2. Update a product")
+    print("3. Delete a product")
+    print("4. Display all products")
+    print("5. Exit")
+
+    try:
+        choice = int(input("Enter your choice (1-5): ").strip())
+    except ValueError:
+        print("Error: Invalid input. Please enter a number.")
+        continue
+
+    # ---------------- ADD ----------------
+    if choice == 1:
+        print("\n--- Add Jollibee Product ---")
+
+        name = ""
+        while name == "":
+            name = input("Product Name: ").strip()
+            if name == "":
+                print("Error: This field cannot be empty. Please try again.")
+
+        price = None
+        while price is None:
+            try:
+                price = float(input("Product Price: ").strip())
+                if price <= 0:
+                    print("Error: Price must be greater than 0.")
+                    price = None
+            except ValueError:
+                print("Error: Please enter a valid number.")
+
+        quantity = None
+        while quantity is None:
+            try:
+                quantity = int(input("Product Quantity: ").strip())
+                if quantity <= 0:
+                    print("Error: Quantity must be greater than 0.")
+                    quantity = None
+            except ValueError:
+                print("Error: Please enter a valid whole number.")
+
+        try:
+            con = mysql.connector.connect(host="localhost", database="db_jollibee", user="root", password="")
+            cur = con.cursor()
+            query = "INSERT INTO tbl_product (PRODUCT_NAME, PRODUCT_PRICE, PRODUCT_QUANTITY) VALUES (%s, %s, %s)"
+            cur.execute(query, (name, price, quantity))
+            con.commit()
+            print(f"'{name}' successfully added!")
+            cur.close()
+            con.close()
+        except Error as error:
+            print(f"Error adding product: {error}")
+
+    # ---------------- UPDATE ----------------
+    elif choice == 2:
+        print("\n--- Update Jollibee Product ---")
+
+        product_id = None
+        while product_id is None:
+            try:
+                product_id = int(input("Enter Product ID to update: ").strip())
+            except ValueError:
+                print("Error: Please enter a valid whole number.")
+
+        try:
+            con = mysql.connector.connect(host="localhost", database="db_jollibee", user="root", password="")
+            cur = con.cursor()
+            cur.execute("SELECT * FROM tbl_product WHERE PRODUCT_ID = %s", (product_id,))
+            record = cur.fetchone()
+
+            if record is None:
+                print("Error: No product found with that ID.")
+            else:
+                name = ""
+                while name == "":
+                    name = input("New Product Name: ").strip()
+                    if name == "":
+                        print("Error: This field cannot be empty. Please try again.")
+
+                price = None
+                while price is None:
+                    try:
+                        price = float(input("New Product Price: ").strip())
+                        if price <= 0:
+                            print("Error: Price must be greater than 0.")
+                            price = None
+                    except ValueError:
+                        print("Error: Please enter a valid number.")
+
+                quantity = None
+                while quantity is None:
+                    try:
+                        quantity = int(input("New Product Quantity: ").strip())
+                        if quantity <= 0:
+                            print("Error: Quantity must be greater than 0.")
+                            quantity = None
+                    except ValueError:
+                        print("Error: Please enter a valid whole number.")
+
+                query = "UPDATE tbl_product SET PRODUCT_NAME=%s, PRODUCT_PRICE=%s, PRODUCT_QUANTITY=%s WHERE PRODUCT_ID=%s"
+                cur.execute(query, (name, price, quantity, product_id))
+                con.commit()
+                print("Product successfully updated!")
+
+            cur.close()
+            con.close()
+        except Error as error:
+            print(f"Error updating product: {error}")
+
+    # ---------------- DELETE ----------------
+    elif choice == 3:
+        print("\n--- Delete Jollibee Product ---")
+
+        product_id = None
+        while product_id is None:
+            try:
+                product_id = int(input("Enter Product ID to delete: ").strip())
+            except ValueError:
+                print("Error: Please enter a valid whole number.")
+
+        try:
+            con = mysql.connector.connect(host="localhost", database="db_jollibee", user="root", password="")
+            cur = con.cursor()
+            cur.execute("SELECT * FROM tbl_product WHERE PRODUCT_ID = %s", (product_id,))
+            record = cur.fetchone()
+
+            if record is None:
+                print("Error: No product found with that ID.")
+            else:
+                confirm = input(f"Are you sure you want to delete product ID {product_id}? (y/n): ").strip().lower()
+                if confirm == "y":
+                    cur.execute("DELETE FROM tbl_product WHERE PRODUCT_ID = %s", (product_id,))
+                    con.commit()
+                    print("Product successfully deleted!")
+                else:
+                    print("Delete cancelled.")
+
+            cur.close()
+            con.close()
+        except Error as error:
+            print(f"Error deleting product: {error}")
+
+    # ---------------- DISPLAY ----------------
+    elif choice == 4:
+        print("\n--- Jollibee Product Menu ---")
+        try:
+            con = mysql.connector.connect(host="localhost", database="db_jollibee", user="root", password="")
+            cur = con.cursor()
+            cur.execute("SELECT PRODUCT_ID, PRODUCT_NAME, PRODUCT_PRICE, PRODUCT_QUANTITY FROM tbl_product")
+            rows = cur.fetchall()
+
+            if not rows:
+                print("No products found.")
+            else:
+                print(f"{'ID':<5}{'Name':<25}{'Price':<12}{'Quantity':<10}")
+                print("-" * 52)
+                for row in rows:
+                    print(f"{row[0]:<5}{row[1]:<25}P{row[2]:<11.2f}{row[3]:<10}")
+
+            cur.close()
+            con.close()
+        except Error as error:
+            print(f"Error retrieving products: {error}")
+
+    # ---------------- EXIT ----------------
+    elif choice == 5:
+        print("Exiting Jollibee Product System. Goodbye!")
+        break
+
+    else:
+        print("Error: Please enter a number between 1 and 5.")
