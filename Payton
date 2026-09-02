@@ -8,6 +8,15 @@ from mysql.connector import Error
 #     PRODUCT_PRICE DECIMAL(10,2),
 #     PRODUCT_QUANTITY INT
 # );
+#
+# CREATE TABLE tbl_order (
+#     ORDER_ID INT AUTO_INCREMENT PRIMARY KEY,
+#     PRODUCT_ID INT,
+#     PRODUCT_NAME VARCHAR(100),
+#     QUANTITY INT,
+#     TOTAL_PRICE DECIMAL(10,2),
+#     FOREIGN KEY (PRODUCT_ID) REFERENCES tbl_product(PRODUCT_ID)
+# );
 
 while True:
     print("\n===== JOLLIBEE PRODUCT SYSTEM =====")
@@ -15,10 +24,12 @@ while True:
     print("2. Update a product")
     print("3. Delete a product")
     print("4. Display all products")
-    print("5. Exit")
+    print("5. Place an order")
+    print("6. Display all orders")
+    print("7. Exit")
 
     try:
-        choice = int(input("Enter your choice (1-5): ").strip())
+        choice = int(input("Enter your choice (1-7): ").strip())
     except ValueError:
         print("Error: Invalid input. Please enter a number.")
         continue
@@ -154,7 +165,7 @@ while True:
         except Error as error:
             print(f"Error deleting product: {error}")
 
-    # ---------------- DISPLAY ----------------
+    # ---------------- DISPLAY PRODUCTS ----------------
     elif choice == 4:
         print("\n--- Jollibee Product Menu ---")
         try:
@@ -176,10 +187,100 @@ while True:
         except Error as error:
             print(f"Error retrieving products: {error}")
 
-    # ---------------- EXIT ----------------
+    # ---------------- PLACE ORDER ----------------
     elif choice == 5:
+        print("\n--- Place an Order ---")
+
+        try:
+            con = mysql.connector.connect(host="localhost", database="db_jollibee", user="root", password="")
+            cur = con.cursor()
+            cur.execute("SELECT PRODUCT_ID, PRODUCT_NAME, PRODUCT_PRICE, PRODUCT_QUANTITY FROM tbl_product")
+            rows = cur.fetchall()
+
+            if not rows:
+                print("No products available to order.")
+            else:
+                print(f"{'ID':<5}{'Name':<25}{'Price':<12}{'In Stock':<10}")
+                print("-" * 52)
+                for row in rows:
+                    print(f"{row[0]:<5}{row[1]:<25}P{row[2]:<11.2f}{row[3]:<10}")
+
+                product_id = None
+                while product_id is None:
+                    try:
+                        product_id = int(input("\nEnter Product ID to order: ").strip())
+                    except ValueError:
+                        print("Error: Please enter a valid whole number.")
+
+                cur.execute("SELECT PRODUCT_NAME, PRODUCT_PRICE, PRODUCT_QUANTITY FROM tbl_product WHERE PRODUCT_ID = %s", (product_id,))
+                product = cur.fetchone()
+
+                if product is None:
+                    print("Error: No product found with that ID.")
+                else:
+                    prod_name, prod_price, prod_stock = product
+
+                    order_qty = None
+                    while order_qty is None:
+                        try:
+                            order_qty = int(input(f"Quantity to order (available: {prod_stock}): ").strip())
+                            if order_qty <= 0:
+                                print("Error: Quantity must be greater than 0.")
+                                order_qty = None
+                            elif order_qty > prod_stock:
+                                print(f"Error: Only {prod_stock} in stock. Please enter a lower quantity.")
+                                order_qty = None
+                        except ValueError:
+                            print("Error: Please enter a valid whole number.")
+
+                    total_price = prod_price * order_qty
+                    confirm = input(f"Order {order_qty}x {prod_name} for a total of P{total_price:.2f}? (y/n): ").strip().lower()
+
+                    if confirm == "y":
+                        cur.execute(
+                            "INSERT INTO tbl_order (PRODUCT_ID, PRODUCT_NAME, QUANTITY, TOTAL_PRICE) VALUES (%s, %s, %s, %s)",
+                            (product_id, prod_name, order_qty, total_price)
+                        )
+                        cur.execute(
+                            "UPDATE tbl_product SET PRODUCT_QUANTITY = PRODUCT_QUANTITY - %s WHERE PRODUCT_ID = %s",
+                            (order_qty, product_id)
+                        )
+                        con.commit()
+                        print("Order successfully placed!")
+                    else:
+                        print("Order cancelled.")
+
+            cur.close()
+            con.close()
+        except Error as error:
+            print(f"Error placing order: {error}")
+
+    # ---------------- DISPLAY ORDERS ----------------
+    elif choice == 6:
+        print("\n--- All Orders ---")
+        try:
+            con = mysql.connector.connect(host="localhost", database="db_jollibee", user="root", password="")
+            cur = con.cursor()
+            cur.execute("SELECT ORDER_ID, PRODUCT_NAME, QUANTITY, TOTAL_PRICE FROM tbl_order")
+            rows = cur.fetchall()
+
+            if not rows:
+                print("No orders found.")
+            else:
+                print(f"{'Order ID':<10}{'Product':<25}{'Qty':<8}{'Total':<10}")
+                print("-" * 53)
+                for row in rows:
+                    print(f"{row[0]:<10}{row[1]:<25}{row[2]:<8}P{row[3]:.2f}")
+
+            cur.close()
+            con.close()
+        except Error as error:
+            print(f"Error retrieving orders: {error}")
+
+    # ---------------- EXIT ----------------
+    elif choice == 7:
         print("Exiting Jollibee Product System. Goodbye!")
         break
 
     else:
-        print("Error: Please enter a number between 1 and 5.")
+        print("Error: Please enter a number between 1 and 7.")
