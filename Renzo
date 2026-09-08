@@ -1,199 +1,267 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gadget Shop</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+import pandas as pd
+import numpy as np
 
-    <!-- HEADER -->
-    <header>
-        <h1 class="logo">Gadget Shop</h1>
+np.random.seed(42)
 
-        <nav>
-            <a href="#home">Home</a>
-            <a href="#products">Products</a>
-            <a href="#categories">Categories</a>
-            <a href="#about">About</a>
-            <a href="#contact">Contact</a>
-        </nav>
-    </header>
 
-    <!-- MAIN CONTENT -->
-    <main>
+n = 120
 
-        <!-- HERO SECTION -->
-        <section id="home" class="hero">
+data = {
+    "student_id": [f"S{1000+i}" for i in range(n)],
+    "program": np.random.choice(["MIT", "MSCS", "MSDS"], n),
+    "age": np.random.randint(22, 50, n),
+    "gender": np.random.choice(["Male", "Female"], n),
+    "attendance_rate": np.random.normal(85, 10, n).round(2),
+    "quiz_average": np.random.normal(82, 12, n).round(2),
+    "assignment_score": np.random.normal(80, 15, n).round(2),
+    "final_exam_score": np.random.normal(78, 14, n).round(2),
+    "lms_login_count": np.random.randint(5, 80, n)
+}
 
-            <aside class="hero-text">
-                <h2>Latest Gadgets at Affordable Prices</h2>
+df = pd.DataFrame(data)
 
-                <p>
-                    Discover the newest gadgets including headphones,
-                    smartwatches, gaming accessories, speakers,
-                    keyboards, and more.
-                </p>
 
-                <button>Shop Now</button>
-            </aside>
+df.loc[[5, 12, 25, 40], "age"] = np.nan
+df.loc[[8, 19, 33, 61], "quiz_average"] = np.nan
+df.loc[[10, 35, 70], "final_exam_score"] = np.nan
+df.loc[[15, 44], "program"] = np.nan
 
-            <aside class="hero-image">
-                <img src="images/banner.jpg" alt="Gadget Banner">
-            </aside>
 
-        </section>
+df.loc[[3, 18, 27], "program"] = "M.I.T."
+df.loc[[6, 22], "program"] = "Masters in IT"
+df.loc[[9, 30], "program"] = "mscs"
+df.loc[[11, 45], "gender"] = "female"
+df.loc[[20, 50], "gender"] = "M"
 
-        <!-- PRODUCTS -->
-        <section id="products">
 
-            <h2 class="title">Featured Products</h2>
+duplicates = df.iloc[[2, 14, 29]]
+df = pd.concat([df, duplicates], ignore_index=True)
 
-            <div class="product-container">
 
-                <article class="card">
-                    <img src="images/headphones.jpg" alt="Headphones">
-                    <h3>Wireless Headphones</h3>
-                    <p>High-quality wireless sound.</p>
-                    <h4>$49</h4>
-                    <button>Buy Now</button>
-                </article>
+df.loc[7, "attendance_rate"] = 150
+df.loc[13, "quiz_average"] = -10
+df.loc[21, "assignment_score"] = 250
+df.loc[31, "lms_login_count"] = 500
 
-                <article class="card">
-                    <img src="images/smartwatch.jpg" alt="Smart Watch">
-                    <h3>Smart Watch</h3>
-                    <p>Track your daily activities.</p>
-                    <h4>$99</h4>
-                    <button>Buy Now</button>
-                </article>
 
-                <article class="card">
-                    <img src="images/keyboard.jpg" alt="Keyboard">
-                    <h3>Mechanical Keyboard</h3>
-                    <p>Comfortable typing experience.</p>
-                    <h4>$69</h4>
-                    <button>Buy Now</button>
-                </article>
+df = df.sample(frac=1).reset_index(drop=True)
 
-                <article class="card">
-                    <img src="images/mouse.jpg" alt="Gaming Mouse">
-                    <h3>Gaming Mouse</h3>
-                    <p>Fast and accurate tracking.</p>
-                    <h4>$35</h4>
-                    <button>Buy Now</button>
-                </article>
+df.head()
 
-                <article class="card">
-                    <img src="images/speaker.jpg" alt="Speaker">
-                    <h3>Bluetooth Speaker</h3>
-                    <p>Crystal-clear audio anywhere.</p>
-                    <h4>$55</h4>
-                    <button>Buy Now</button>
-                </article>
 
-                <article class="card">
-                    <img src="images/powerbank.jpg" alt="Power Bank">
-                    <h3>Power Bank</h3>
-                    <p>Fast charging for your devices.</p>
-                    <h4>$29</h4>
-                    <button>Buy Now</button>
-                </article>
+print("Shape of Dataset:")
+print(df.shape)
 
-            </div>
+print("\nDataset Information:")
+df.info()
 
-        </section>
+print("\nSummary Statistics:")
+print(df.describe())
 
-        <!-- CATEGORIES -->
-        <section id="categories">
+print("\nMissing Values:")
+print(df.isnull().sum())
 
-            <h2 class="title">Categories</h2>
+print("\nDuplicate Records:")
+print(df.duplicated().sum())
 
-            <div class="category-container">
 
-                <div class="category">
-                    <h3>🎧 Audio</h3>
-                    <p>Headphones, Speakers</p>
-                    <button>Explore</button>
-                </div>
+issues = pd.DataFrame({
+    "Issue Type": [
+        "Missing Value",
+        "Missing Value",
+        "Missing Value",
+        "Missing Value",
+        "Inconsistency",
+        "Inconsistency",
+        "Outlier",
+        "Outlier",
+        "Outlier",
+        "Outlier",
+        "Duplicate"
+    ],
+    "Column Affected": [
+        "age",
+        "program",
+        "quiz_average",
+        "final_exam_score",
+        "program",
+        "gender",
+        "attendance_rate",
+        "quiz_average",
+        "assignment_score",
+        "lms_login_count",
+        "student_id"
+    ],
+    "Example Found": [
+        "NaN",
+        "NaN",
+        "NaN",
+        "NaN",
+        "M.I.T., Masters in IT, mscs",
+        "female, M",
+        "150",
+        "-10",
+        "250",
+        "500",
+        "Repeated student record"
+    ],
+    "Possible Cause": [
+        "Incomplete student profile",
+        "Missing program entry",
+        "Missing quiz score",
+        "Missing exam score",
+        "Different encoding",
+        "Different capitalization",
+        "Encoding error",
+        "Encoding error",
+        "Encoding error",
+        "System error",
+        "Duplicate export"
+    ]
+})
 
-                <div class="category">
-                    <h3>⌚ Wearables</h3>
-                    <p>Smart Watches</p>
-                    <button>Explore</button>
-                </div>
+issues
 
-                <div class="category">
-                    <h3>🎮 Gaming</h3>
-                    <p>Mouse & Keyboard</p>
-                    <button>Explore</button>
-                </div>
 
-                <div class="category">
-                    <h3>🔋 Accessories</h3>
-                    <p>Power Banks & More</p>
-                    <button>Explore</button>
-                </div>
+df_clean = df.copy()
 
-            </div>
+df_clean["age"] = df_clean["age"].fillna(df_clean["age"].median())
+df_clean["quiz_average"] = df_clean["quiz_average"].fillna(df_clean["quiz_average"].median())
+df_clean["final_exam_score"] = df_clean["final_exam_score"].fillna(df_clean["final_exam_score"].median())
 
-        </section>
+df_clean["program"] = df_clean["program"].fillna(df_clean["program"].mode()[0])
 
-        <!-- ABOUT -->
-        <section id="about">
+print(df_clean.isnull().sum())
 
-            <h2 class="title">About Us</h2>
 
-            <div class="about-box">
+print("Duplicate Records:")
+print(df_clean[df_clean.duplicated()])
 
-                <aside>
-                    <img src="images/store.jpg" alt="Store">
-                </aside>
+df_clean = df_clean.drop_duplicates()
 
-                <aside>
+print("\nRemaining Duplicates:")
+print(df_clean.duplicated().sum())
 
-                    <p>
-                        Gadget Shop is your trusted destination for
-                        modern gadgets and accessories. We provide
-                        quality products at affordable prices while
-                        delivering excellent customer service.
-                    </p>
 
-                    <button>Learn More</button>
+program_map = {
+    "M.I.T.": "MIT",
+    "Masters in IT": "MIT",
+    "mscs": "MSCS"
+}
 
-                </aside>
+gender_map = {
+    "female": "Female",
+    "M": "Male"
+}
 
-            </div>
+df_clean["program"] = df_clean["program"].replace(program_map)
+df_clean["gender"] = df_clean["gender"].replace(gender_map)
 
-        </section>
+print(df_clean["program"].value_counts())
+print(df_clean["gender"].value_counts())
 
-       <!-- CONTACT -->
-‎        <section id="contact">
-‎
-‎            <h2 class="title">Contact Us</h2>
-‎
-‎            <form>
-‎
-‎                <input type="text" placeholder="Full Name">
-‎
-‎                <input type="email" placeholder="Email Address">
-‎
-‎                <textarea placeholder="Write your message..."></textarea>
-‎
-‎                <button type="submit">Send Message</button>
-‎
-‎            </form>
-‎
-‎        </section>
-‎
-‎    </main>
-‎
-‎    <!-- FOOTER -->
-‎    <footer>
-‎
-‎        <p>© 2026 Gadget Shop | All Rights Reserved.</p>
-‎
-‎    </footer>
-‎
-‎</body>
-‎</html>
+
+df_clean.loc[df_clean["attendance_rate"] > 100, "attendance_rate"] = np.nan
+df_clean.loc[df_clean["attendance_rate"] < 0, "attendance_rate"] = np.nan
+
+df_clean.loc[df_clean["quiz_average"] > 100, "quiz_average"] = np.nan
+df_clean.loc[df_clean["quiz_average"] < 0, "quiz_average"] = np.nan
+
+df_clean.loc[df_clean["assignment_score"] > 100, "assignment_score"] = np.nan
+df_clean.loc[df_clean["assignment_score"] < 0, "assignment_score"] = np.nan
+
+df_clean.loc[df_clean["final_exam_score"] > 100, "final_exam_score"] = np.nan
+df_clean.loc[df_clean["final_exam_score"] < 0, "final_exam_score"] = np.nan
+
+df_clean.loc[df_clean["lms_login_count"] < 0, "lms_login_count"] = np.nan
+df_clean.loc[df_clean["lms_login_count"] > 200, "lms_login_count"] = np.nan
+
+df_clean["attendance_rate"] = df_clean["attendance_rate"].fillna(df_clean["attendance_rate"].median())
+df_clean["quiz_average"] = df_clean["quiz_average"].fillna(df_clean["quiz_average"].median())
+df_clean["assignment_score"] = df_clean["assignment_score"].fillna(df_clean["assignment_score"].median())
+df_clean["final_exam_score"] = df_clean["final_exam_score"].fillna(df_clean["final_exam_score"].median())
+df_clean["lms_login_count"] = df_clean["lms_login_count"].fillna(df_clean["lms_login_count"].median())
+
+df_clean.describe()
+
+
+print("Missing Values")
+print(df_clean.isnull().sum())
+
+print("\nDuplicate Records")
+print(df_clean.duplicated().sum())
+
+print("\nProgram Counts")
+print(df_clean["program"].value_counts())
+
+print("\nGender Counts")
+print(df_clean["gender"].value_counts())
+
+print("\nAttendance Valid:", df_clean["attendance_rate"].between(0,100).all())
+print("Quiz Valid:", df_clean["quiz_average"].between(0,100).all())
+print("Assignment Valid:", df_clean["assignment_score"].between(0,100).all())
+print("Final Exam Valid:", df_clean["final_exam_score"].between(0,100).all())
+
+
+comparison = pd.DataFrame({
+    "Original Missing Values": df.isnull().sum(),
+    "Cleaned Missing Values": df_clean.isnull().sum()
+})
+
+comparison
+
+
+  print("Original Dataset Summary")
+  display(df.describe())
+
+  print("Cleaned Dataset Summary")
+  display(df_clean.describe())
+
+
+cleaning_log = pd.DataFrame({
+    "Column": [
+        "age",
+        "program",
+        "quiz_average",
+        "final_exam_score",
+        "attendance_rate",
+        "assignment_score",
+        "lms_login_count",
+        "student_id"
+    ],
+    "Issue Found": [
+        "Missing values",
+        "Inconsistent labels",
+        "Missing values",
+        "Missing values",
+        "Value above 100",
+        "Value above 100",
+        "Extreme value",
+        "Duplicate records"
+    ],
+    "Cleaning Action": [
+        "Filled with median",
+        "Standardized values",
+        "Filled with median",
+        "Filled with median",
+        "Replaced then imputed",
+        "Replaced then imputed",
+        "Replaced then imputed",
+        "Removed duplicates"
+    ],
+    "Reason / Justification": [
+        "Median is less affected by outliers.",
+        "Ensures consistent grouping.",
+        "Median preserves the distribution.",
+        "Median is robust against outliers.",
+        "Attendance cannot exceed 100.",
+        "Assignment scores cannot exceed 100.",
+        "500 logins is unrealistic.",
+        "Duplicate records should not be counted twice."
+    ]
+})
+
+cleaning_log
+
+
+
