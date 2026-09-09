@@ -4,23 +4,6 @@ import customtkinter
 import mysql.connector
 from mysql.connector import Error
 
-# ================= Expected table schema =================
-# CREATE TABLE tbl_product (
-#     PRODUCT_ID INT AUTO_INCREMENT PRIMARY KEY,
-#     PRODUCT_NAME VARCHAR(100),
-#     PRODUCT_PRICE DECIMAL(10,2),
-#     PRODUCT_QUANTITY INT
-# );
-#
-# CREATE TABLE tbl_order (
-#     ORDER_ID INT AUTO_INCREMENT PRIMARY KEY,
-#     PRODUCT_ID INT,
-#     PRODUCT_NAME VARCHAR(100),
-#     QUANTITY INT,
-#     TOTAL_PRICE DECIMAL(10,2),
-#     FOREIGN KEY (PRODUCT_ID) REFERENCES tbl_product(PRODUCT_ID)
-# );
-# ============================================================
 
 customtkinter.set_appearance_mode("Light")
 customtkinter.set_default_color_theme("blue")
@@ -43,11 +26,9 @@ style.configure("Jollibee.Treeview.Heading", background=JOLLIBEE_RED,
                 foreground="white", font=("Century Gothic", 12, "bold"))
 style.map("Jollibee.Treeview", background=[("selected", JOLLIBEE_YELLOW)])
 
-# ---------------- Title ----------------
 customtkinter.CTkLabel(window, text="JOLLIBEE PRODUCT SYSTEM", font=("Century Gothic", 22, "bold"),
                         text_color=JOLLIBEE_RED).pack(pady=(15, 10))
 
-# ---------------- 4 text fields ----------------
 fields_frame = customtkinter.CTkFrame(window, fg_color=WHITE)
 fields_frame.pack(pady=5)
 
@@ -67,7 +48,7 @@ customtkinter.CTkLabel(fields_frame, text="Product Quantity", font=("Century Got
 entry_qty = customtkinter.CTkEntry(fields_frame, width=160, placeholder_text="Product Quantity")
 entry_qty.grid(row=3, column=1, padx=8, pady=4)
 
-# ---------------- Product table ----------------
+
 tree = ttk.Treeview(window, columns=("id", "name", "price", "qty"), show="headings",
                      style="Jollibee.Treeview", height=10)
 for col, label, width in [("id", "ID", 50), ("name", "Name", 220), ("price", "Price", 100), ("qty", "Qty", 90)]:
@@ -76,11 +57,6 @@ for col, label, width in [("id", "ID", 50), ("name", "Name", 220), ("price", "Pr
 tree.pack(pady=15, padx=20, fill="both", expand=True)
 
 
-# ============================================================
-# FUNCTIONS
-# ============================================================
-
-# ---------------- View All Products ----------------
 def refresh_products():
     con = None
     cur = None
@@ -120,8 +96,6 @@ def refresh_products():
         if con is not None:
             con.close()
 
-
-# ---------------- Add Product ----------------
 def add_product():
     con = None
     cur = None
@@ -189,8 +163,6 @@ def add_product():
 
         refresh_products()
 
-
-# ---------------- Delete Product ----------------
 def delete_product():
     con = None
     cur = None
@@ -259,8 +231,6 @@ def delete_product():
 
         refresh_products()
 
-
-# ---------------- Update Product ----------------
 def update_product():
     con = None
     cur = None
@@ -350,7 +320,6 @@ def update_product():
         refresh_products()
 
 
-# ---------------- Order Product ----------------
 def order_product():
     con = None
     cur = None
@@ -456,7 +425,6 @@ def order_product():
         refresh_products()
 
 
-# ---------------- 5 buttons at the bottom ----------------
 btn_frame = customtkinter.CTkFrame(window, fg_color=WHITE)
 btn_frame.pack(pady=15)
 
