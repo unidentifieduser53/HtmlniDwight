@@ -1,412 +1,513 @@
-/* ===== Global Style ===== */
+import tkinter
+from tkinter import ttk, messagebox
+import customtkinter
+import mysql.connector
+from mysql.connector import Error
+
+# ================= Expected table schema =================
+# CREATE TABLE tbl_product (
+#     PRODUCT_ID INT AUTO_INCREMENT PRIMARY KEY,
+#     PRODUCT_NAME VARCHAR(100),
+#     PRODUCT_PRICE DECIMAL(10,2),
+#     PRODUCT_QUANTITY INT
+# );
+#
+# CREATE TABLE tbl_order (
+#     ORDER_ID INT AUTO_INCREMENT PRIMARY KEY,
+#     PRODUCT_ID INT,
+#     PRODUCT_NAME VARCHAR(100),
+#     QUANTITY INT,
+#     TOTAL_PRICE DECIMAL(10,2),
+#     FOREIGN KEY (PRODUCT_ID) REFERENCES tbl_product(PRODUCT_ID)
+# );
+# ============================================================
+
+customtkinter.set_appearance_mode("Light")
+customtkinter.set_default_color_theme("blue")
+
+JOLLIBEE_RED = "#D2232A"
+JOLLIBEE_DARK_RED = "#A31921"
+JOLLIBEE_YELLOW = "#FFC72C"
+WHITE = "#FFFFFF"
+
+window = customtkinter.CTk()
+window.geometry("780x620")
+window.title("Jollibee Product System")
+window.configure(fg_color=WHITE)
+
+style = ttk.Style()
+style.theme_use("default")
+style.configure("Jollibee.Treeview", background="white", fieldbackground="white",
+                foreground="black", rowheight=26, font=("Century Gothic", 11))
+style.configure("Jollibee.Treeview.Heading", background=JOLLIBEE_RED,
+                foreground="white", font=("Century Gothic", 12, "bold"))
+style.map("Jollibee.Treeview", background=[("selected", JOLLIBEE_YELLOW)])
+
+# ---------------- Title ----------------
+customtkinter.CTkLabel(window, text="JOLLIBEE PRODUCT SYSTEM", font=("Century Gothic", 22, "bold"),
+                        text_color=JOLLIBEE_RED).pack(pady=(15, 10))
+
+# ---------------- 4 text fields ----------------
+fields_frame = customtkinter.CTkFrame(window, fg_color=WHITE)
+fields_frame.pack(pady=5)
+
+customtkinter.CTkLabel(fields_frame, text="Product ID", font=("Century Gothic", 12)).grid(row=0, column=0, padx=8, pady=4, sticky="w")
+entry_id = customtkinter.CTkEntry(fields_frame, width=160, placeholder_text="ID (for update/delete/order)")
+entry_id.grid(row=0, column=1, padx=8, pady=4)
+
+customtkinter.CTkLabel(fields_frame, text="Product Name", font=("Century Gothic", 12)).grid(row=1, column=0, padx=8, pady=4, sticky="w")
+entry_name = customtkinter.CTkEntry(fields_frame, width=160, placeholder_text="Product Name")
+entry_name.grid(row=1, column=1, padx=8, pady=4)
+
+customtkinter.CTkLabel(fields_frame, text="Product Price", font=("Century Gothic", 12)).grid(row=2, column=0, padx=8, pady=4, sticky="w")
+entry_price = customtkinter.CTkEntry(fields_frame, width=160, placeholder_text="Product Price")
+entry_price.grid(row=2, column=1, padx=8, pady=4)
+
+customtkinter.CTkLabel(fields_frame, text="Product Quantity", font=("Century Gothic", 12)).grid(row=3, column=0, padx=8, pady=4, sticky="w")
+entry_qty = customtkinter.CTkEntry(fields_frame, width=160, placeholder_text="Product Quantity")
+entry_qty.grid(row=3, column=1, padx=8, pady=4)
+
+# ---------------- Product table ----------------
+tree = ttk.Treeview(window, columns=("id", "name", "price", "qty"), show="headings",
+                     style="Jollibee.Treeview", height=10)
+for col, label, width in [("id", "ID", 50), ("name", "Name", 220), ("price", "Price", 100), ("qty", "Qty", 90)]:
+    tree.heading(col, text=label)
+    tree.column(col, width=width, anchor="center")
+tree.pack(pady=15, padx=20, fill="both", expand=True)
+
+
+# ============================================================
+# FUNCTIONS
+# ============================================================
+
+# ---------------- View All Products ----------------
+def refresh_products():
+    con = None
+    cur = None
+
+    try:
+        for row in tree.get_children():
+            tree.delete(row)
+
+        con = mysql.connector.connect(
+            host="localhost",
+            database="db_jollibee",
+            user="root",
+            password=""
+        )
+
+        cur = con.cursor()
+
+        cur.execute("""
+            SELECT PRODUCT_ID, PRODUCT_NAME, PRODUCT_PRICE, PRODUCT_QUANTITY
+            FROM tbl_product
+        """)
+
+        for r in cur.fetchall():
+            tree.insert(
+                "",
+                tkinter.END,
+                values=(r[0], r[1], f"P{r[2]:.2f}", r[3])
+            )
+
+    except Error as error:
+        messagebox.showerror("Database Error", str(error))
+
+    finally:
+        if cur is not None:
+            cur.close()
+
+        if con is not None:
+            con.close()
+
+
+# ---------------- Add Product ----------------
+def add_product():
+    con = None
+    cur = None
+
+    try:
+        name = entry_name.get().strip()
+        price_str = entry_price.get().strip()
+        qty_str = entry_qty.get().strip()
+
+        if name == "" or price_str == "" or qty_str == "":
+            raise ValueError(
+                "Product Name, Price, and Quantity are required."
+            )
+
+        price = float(price_str)
+        qty = int(qty_str)
+
+        if price <= 0 or qty <= 0:
+            raise ValueError(
+                "Price and Quantity must be greater than 0."
+            )
+
+        con = mysql.connector.connect(
+            host="localhost",
+            database="db_jollibee",
+            user="root",
+            password=""
+        )
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: "Poppins", Arial, sans-serif;
-    scroll-behavior: smooth;
-}
+        cur = con.cursor()
+
+        cur.execute(
+            """
+            INSERT INTO tbl_product
+            (PRODUCT_NAME, PRODUCT_PRICE, PRODUCT_QUANTITY)
+            VALUES (%s, %s, %s)
+            """,
+            (name, price, qty)
+        )
 
+        con.commit()
 
-body {
-    background-color: #fff8ef;
-    color: #4b2b17;
-    line-height: 1.6;
-}
+        messagebox.showinfo(
+            "Success",
+            f"'{name}' successfully added!"
+        )
 
+        entry_id.delete(0, tkinter.END)
+        entry_name.delete(0, tkinter.END)
+        entry_price.delete(0, tkinter.END)
+        entry_qty.delete(0, tkinter.END)
 
-/* ===== Header ===== */
+    except ValueError as error:
+        messagebox.showerror("Error", str(error))
 
-header {
-    background-color: #6b3518;
-    padding: 15px 8%;
-    position: fixed;
-    width: 100%;
-    top: 0;
-    z-index: 1000;
-}
+    except Error as error:
+        messagebox.showerror("Database Error", str(error))
+
+    finally:
+        if cur is not None:
+            cur.close()
+
+        if con is not None:
+            con.close()
 
+        refresh_products()
+
+
+# ---------------- Delete Product ----------------
+def delete_product():
+    con = None
+    cur = None
+
+    try:
+        id_str = entry_id.get().strip()
+
+        if id_str == "" or not id_str.isdigit():
+            raise ValueError(
+                "Please enter a valid Product ID to delete."
+            )
+
+        product_id = int(id_str)
+
+        con = mysql.connector.connect(
+            host="localhost",
+            database="db_jollibee",
+            user="root",
+            password=""
+        )
+
+        cur = con.cursor()
+
+        cur.execute(
+            "SELECT PRODUCT_NAME FROM tbl_product WHERE PRODUCT_ID = %s",
+            (product_id,)
+        )
+
+        record = cur.fetchone()
+
+        if record is None:
+            raise ValueError(
+                "No product found with that ID."
+            )
+
+        if messagebox.askyesno(
+            "Confirm",
+            f"Delete '{record[0]}'?"
+        ):
+            cur.execute(
+                "DELETE FROM tbl_product WHERE PRODUCT_ID = %s",
+                (product_id,)
+            )
+
+            con.commit()
+
+            messagebox.showinfo(
+                "Success",
+                "Product successfully deleted!"
+            )
+
+            entry_id.delete(0, tkinter.END)
+
+    except ValueError as error:
+        messagebox.showerror("Error", str(error))
+
+    except Error as error:
+        messagebox.showerror("Database Error", str(error))
+
+    finally:
+        if cur is not None:
+            cur.close()
+
+        if con is not None:
+            con.close()
+
+        refresh_products()
 
-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-
-.logo {
-    color: #ffb347;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-
-.nav-links {
-    list-style: none;
-    display: flex;
-    gap: 25px;
-}
-
-
-.nav-links a {
-    text-decoration: none;
-    color: white;
-    font-weight: bold;
-    transition: 0.3s;
-}
-
-
-.nav-links a:hover {
-    color: #ffb347;
-}
-
-
-
-/* ===== Hero Section ===== */
-
-.hero {
-
-    height: 100vh;
-
-    background:
-    linear-gradient(
-        rgba(70,30,10,0.65),
-        rgba(70,30,10,0.65)
-    ),
-    url("images/bulacan-bg.jpg");
-
-    background-size: cover;
-    background-position: center;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    text-align: center;
-    padding: 20px;
-
-}
-
-
-.hero-content {
-
-    color: white;
-    max-width: 800px;
-
-}
-
-
-.hero-content h2 {
-
-    font-size: 55px;
-    margin-bottom: 20px;
-
-}
-
-
-.hero-content p {
-
-    font-size: 20px;
-    margin-bottom: 30px;
-
-}
-
-
-
-/* ===== Buttons ===== */
-
-.btn {
-
-    display: inline-block;
-
-    background-color: #d2691e;
-
-    color: white;
-
-    padding: 12px 30px;
-
-    border-radius: 30px;
-
-    text-decoration: none;
-
-    border: none;
-
-    cursor: pointer;
-
-    font-size: 16px;
-
-    transition: 0.3s;
-
-}
-
-
-.btn:hover {
-
-    background-color: #8b4513;
-
-    transform: translateY(-3px);
-
-}
-
-
-
-/* ===== Sections ===== */
-
-.section {
-
-    padding: 80px 10%;
-
-    text-align: center;
-
-}
-
-
-.section h2 {
-
-    font-size: 38px;
-
-    margin-bottom: 25px;
-
-    color: #8b4513;
-
-}
-
-
-.section p {
-
-    max-width: 900px;
-
-    margin: auto;
-
-    font-size: 18px;
-
-}
-
-
-
-/* ===== Highlight Sections ===== */
-
-.highlight {
-
-    background-color: #f4d3a3;
-
-}
-
-
-
-/* ===== Cards ===== */
-
-.cards {
-
-    margin-top: 40px;
-
-    display: grid;
-
-    grid-template-columns: repeat(3,1fr);
-
-    gap: 25px;
-
-}
-
-
-
-.card {
-
-    background:white;
-
-    padding:30px;
-
-    border-radius:15px;
-
-    box-shadow:0 5px 15px rgba(0,0,0,0.15);
-
-    transition:0.3s;
-
-}
-
-
-
-.card:hover {
-
-    transform:translateY(-10px);
-
-}
-
-
-
-.card h3 {
-
-    color:#d2691e;
-
-    margin-bottom:15px;
-
-}
-
-
-
-/* ===== Gallery ===== */
-
-.images {
-
-    margin-top:40px;
-
-    display:grid;
-
-    grid-template-columns:repeat(3,1fr);
-
-    gap:20px;
-
-}
-
-
-
-.images img {
-
-    width:100%;
-
-    height:250px;
-
-    object-fit:cover;
-
-    border-radius:15px;
-
-    transition:0.3s;
-
-}
-
-
-
-.images img:hover {
-
-    transform:scale(1.05);
-
-}
-
-
-
-/* ===== Contact ===== */
-
-.contact {
-
-    background:#6b3518;
-
-    color:white;
-
-}
-
-
-.contact h2 {
-
-    color:#ffb347;
-
-}
-
-
-
-/* ===== Footer ===== */
-
-footer {
-
-    background:#3b1c0d;
-
-    color:white;
-
-    text-align:center;
-
-    padding:20px;
-
-}
-
-
-
-/* ===== Responsive Design ===== */
-
-
-@media(max-width:900px){
-
-
-    nav {
-
-        flex-direction:column;
-
-    }
-
-
-    .nav-links {
-
-        flex-wrap:wrap;
-
-        justify-content:center;
-
-        margin-top:15px;
-
-    }
-
-
-
-    .hero-content h2 {
-
-        font-size:40px;
-
-    }
-
-
-    .cards {
-
-        grid-template-columns:1fr;
-
-    }
-
-
-    .images {
-
-        grid-template-columns:1fr;
-
-    }
-
-}
-
-
-
-@media(max-width:500px){
-
-
-    .logo {
-
-        font-size:22px;
-
-    }
-
-
-    .nav-links {
-
-        gap:12px;
-
-        font-size:14px;
-
-    }
-
-
-    .hero-content h2 {
-
-        font-size:32px;
-
-    }
-
-
-    .hero-content p {
-
-        font-size:16px;
-
-    }
-
-
-    .section {
-
-        padding:60px 5%;
-
-    }
-
-
-}
+
+# ---------------- Update Product ----------------
+def update_product():
+    con = None
+    cur = None
+
+    try:
+        id_str = entry_id.get().strip()
+        name = entry_name.get().strip()
+        price_str = entry_price.get().strip()
+        qty_str = entry_qty.get().strip()
+
+        if id_str == "" or not id_str.isdigit():
+            raise ValueError(
+                "Please enter a valid Product ID to update."
+            )
+
+        if name == "" or price_str == "" or qty_str == "":
+            raise ValueError(
+                "Product Name, Price, and Quantity are required."
+            )
+
+        product_id = int(id_str)
+        price = float(price_str)
+        qty = int(qty_str)
+
+        if price <= 0 or qty <= 0:
+            raise ValueError(
+                "Price and Quantity must be greater than 0."
+            )
+
+        con = mysql.connector.connect(
+            host="localhost",
+            database="db_jollibee",
+            user="root",
+            password=""
+        )
+
+        cur = con.cursor()
+
+        cur.execute(
+            "SELECT PRODUCT_ID FROM tbl_product WHERE PRODUCT_ID = %s",
+            (product_id,)
+        )
+
+        record = cur.fetchone()
+
+        if record is None:
+            raise ValueError(
+                "No product found with that ID."
+            )
+
+        cur.execute(
+            """
+            UPDATE tbl_product
+            SET PRODUCT_NAME=%s,
+                PRODUCT_PRICE=%s,
+                PRODUCT_QUANTITY=%s
+            WHERE PRODUCT_ID=%s
+            """,
+            (name, price, qty, product_id)
+        )
+
+        con.commit()
+
+        messagebox.showinfo(
+            "Success",
+            "Product successfully updated!"
+        )
+
+        entry_id.delete(0, tkinter.END)
+        entry_name.delete(0, tkinter.END)
+        entry_price.delete(0, tkinter.END)
+        entry_qty.delete(0, tkinter.END)
+
+    except ValueError as error:
+        messagebox.showerror("Error", str(error))
+
+    except Error as error:
+        messagebox.showerror("Database Error", str(error))
+
+    finally:
+        if cur is not None:
+            cur.close()
+
+        if con is not None:
+            con.close()
+
+        refresh_products()
+
+
+# ---------------- Order Product ----------------
+def order_product():
+    con = None
+    cur = None
+
+    try:
+        refresh_products()
+
+        id_str = entry_id.get().strip()
+        qty_str = entry_qty.get().strip()
+
+        if id_str == "" or not id_str.isdigit():
+            raise ValueError(
+                "Please enter a valid Product ID to order."
+            )
+
+        if qty_str == "" or not qty_str.isdigit() or int(qty_str) <= 0:
+            raise ValueError(
+                "Please enter a valid Quantity to order."
+            )
+
+        product_id = int(id_str)
+        order_qty = int(qty_str)
+
+        con = mysql.connector.connect(
+            host="localhost",
+            database="db_jollibee",
+            user="root",
+            password=""
+        )
+
+        cur = con.cursor()
+
+        cur.execute(
+            """
+            SELECT PRODUCT_NAME, PRODUCT_PRICE, PRODUCT_QUANTITY
+            FROM tbl_product
+            WHERE PRODUCT_ID = %s
+            """,
+            (product_id,)
+        )
+
+        record = cur.fetchone()
+
+        if record is None:
+            raise ValueError(
+                "No product found with that ID."
+            )
+
+        prod_name, prod_price, prod_stock = record
+
+        if order_qty > prod_stock:
+            raise ValueError(
+                f"Only {prod_stock} in stock."
+            )
+
+        total = prod_price * order_qty
+
+        if messagebox.askyesno(
+            "Confirm Order",
+            f"Order {order_qty}x {prod_name} for a total of P{total:.2f}?"
+        ):
+            cur.execute(
+                """
+                INSERT INTO tbl_order
+                (PRODUCT_ID, PRODUCT_NAME, QUANTITY, TOTAL_PRICE)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (product_id, prod_name, order_qty, total)
+            )
+
+            cur.execute(
+                """
+                UPDATE tbl_product
+                SET PRODUCT_QUANTITY = PRODUCT_QUANTITY - %s
+                WHERE PRODUCT_ID = %s
+                """,
+                (order_qty, product_id)
+            )
+
+            con.commit()
+
+            messagebox.showinfo(
+                "Success",
+                "Order successfully placed!"
+            )
+
+            entry_id.delete(0, tkinter.END)
+            entry_qty.delete(0, tkinter.END)
+
+    except ValueError as error:
+        messagebox.showerror("Error", str(error))
+
+    except Error as error:
+        messagebox.showerror("Database Error", str(error))
+
+    finally:
+        if cur is not None:
+            cur.close()
+
+        if con is not None:
+            con.close()
+
+        refresh_products()
+
+
+# ---------------- 5 buttons at the bottom ----------------
+btn_frame = customtkinter.CTkFrame(window, fg_color=WHITE)
+btn_frame.pack(pady=15)
+
+customtkinter.CTkButton(
+    btn_frame,
+    text="Add Product",
+    width=130,
+    fg_color=JOLLIBEE_RED,
+    hover_color=JOLLIBEE_DARK_RED,
+    command=add_product
+).grid(row=0, column=0, padx=6)
+
+customtkinter.CTkButton(
+    btn_frame,
+    text="Delete Product",
+    width=130,
+    fg_color=JOLLIBEE_RED,
+    hover_color=JOLLIBEE_DARK_RED,
+    command=delete_product
+).grid(row=0, column=1, padx=6)
+
+customtkinter.CTkButton(
+    btn_frame,
+    text="Update Product",
+    width=130,
+    fg_color=JOLLIBEE_RED,
+    hover_color=JOLLIBEE_DARK_RED,
+    command=update_product
+).grid(row=0, column=2, padx=6)
+
+customtkinter.CTkButton(
+    btn_frame,
+    text="View All Products",
+    width=140,
+    fg_color=JOLLIBEE_YELLOW,
+    text_color="black",
+    hover_color="#E6B325",
+    command=refresh_products
+).grid(row=0, column=3, padx=6)
+
+customtkinter.CTkButton(
+    btn_frame,
+    text="Order a Product",
+    width=140,
+    fg_color=JOLLIBEE_RED,
+    hover_color=JOLLIBEE_DARK_RED,
+    command=order_product
+).grid(row=0, column=4, padx=6)
+
+
+# Load products on startup
+refresh_products()
+
+window.mainloop()
